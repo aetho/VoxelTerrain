@@ -51,6 +51,9 @@ public class MapDisplay : MonoBehaviour {
 
                 float threshold = 0.5f;
                 if (noiseMap[xIndex, zIndex] < threshold) noiseMap[xIndex, zIndex] = threshold;
+
+                noiseMap[xIndex, zIndex] = (Mathf.Round(noiseMap[xIndex, zIndex] * 20.0f)) / 20.0f;
+
                 yPos = noiseMap[xIndex, zIndex] * scale * mapHeight;
 
                 vertices[i] = new Vector3(xPos, yPos, zPos);
