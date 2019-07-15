@@ -3,18 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class MapDisplay : MonoBehaviour {
+    private Vector3[] vertices;
+    private Mesh mesh;
     public Renderer textureRender;
+    public MeshFilter meshFilter;
     public void DrawNoiseMap(float[,] noiseMap) {
         int width = noiseMap.GetLength(0);
-        int height = noiseMap.GetLength(1);
+        int depth = noiseMap.GetLength(1);
 
-        Texture2D texture = new Texture2D(width, height);
+        Texture2D texture = new Texture2D(width, depth);
 
-        Color[] colourMap = new Color[width * height];
+        Color[] colourMap = new Color[width * depth];
 
-        for (int y = 0; y < height; y++) {
+        for (int z = 0; z < depth; z++) {
             for (int x = 0; x < width; x++) {
-                colourMap[y * width + x] = Color.Lerp(Color.black, Color.white, noiseMap[x, y]);
+                colourMap[z * width + x] = Color.Lerp(Color.black, Color.white, noiseMap[x, z]);
             }
         }
 
@@ -22,6 +25,57 @@ public class MapDisplay : MonoBehaviour {
         texture.Apply();
 
         textureRender.sharedMaterial.mainTexture = texture;
-        textureRender.transform.localScale = new Vector3(width, 1, height);
+        textureRender.transform.localScale = new Vector3(width, 1, depth);
+    }
+
+    public void GenerateMesh(float[,] noiseMap, float scale, float mapHeight) {
+        int mapWidth = noiseMap.GetLength(0);
+        int mapDepth = noiseMap.GetLength(1);
+
+        mesh = new Mesh();
+        mesh.name = "Terrain Mesh";
+        meshFilter.mesh = mesh;
+
+        vertices = new Vector3[(mapWidth + 1) * (mapDepth + 1)];
+        Vector2[] uv = new Vector2[vertices.Length];
+        Vector4[] tangents = new Vector4[vertices.Length];
+        Vector4 tangent = new Vector4(1f, 0f, 0f, -1f);
+
+        for (int i = 0, z = 0; z <= mapDepth; z++) {
+            for (int x = 0; x <= mapWidth; x++, i++) {
+                float xPos = (x - mapWidth / 2);
+                float zPos = (z - mapDepth / 2);
+                float yPos;
+
+                int xIndex = (x == mapWidth) ? x - 1 : x;
+                int zIndex = (z == mapWidth) ? z - 1 : z;
+
+                float threshold = 0.5f;
+                if (noiseMap[xIndex, zIndex] < threshold) noiseMap[xIndex, zIndex] = threshold;
+                yPos = noiseMap[xIndex, zIndex] * scale * mapHeight;
+
+                vertices[i] = new Vector3(xPos, yPos, zPos);
+
+                uv[i] = new Vector2((float)x / mapWidth, (float)z / mapDepth);
+                tangents[i] = tangent;
+            }
+        }
+
+        mesh.vertices = vertices;
+        mesh.uv = uv;
+        mesh.tangents = tangents;
+
+        int[] triangles = new int[6 * mapWidth * mapDepth];
+        for (int ti = 0, vi = 0, z = 0; z < mapDepth; z++, vi++) {
+            for (int x = 0; x < mapWidth; x++, ti += 6, vi++) {
+                triangles[ti] = vi;
+                triangles[ti + 1] = triangles[ti + 4] = vi + mapWidth + 1;
+                triangles[ti + 2] = triangles[ti + 3] = vi + 1;
+                triangles[ti + 5] = vi + mapWidth + 2;
+            }
+        }
+
+        mesh.triangles = triangles;
+        mesh.RecalculateNormals();
     }
 }
