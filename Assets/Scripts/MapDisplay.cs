@@ -39,7 +39,6 @@ public class MapDisplay : MonoBehaviour {
         vertices = new Vector3[(mapWidth + 1) * (mapDepth + 1)];
         Vector2[] uv = new Vector2[vertices.Length];
         Vector4[] tangents = new Vector4[vertices.Length];
-        Vector4 tangent = new Vector4(1f, 0f, 0f, -1f);
 
         for (int i = 0, z = 0; z <= mapDepth; z++) {
             for (int x = 0; x <= mapWidth; x++, i++) {
@@ -57,13 +56,11 @@ public class MapDisplay : MonoBehaviour {
                 vertices[i] = new Vector3(xPos, yPos, zPos);
 
                 uv[i] = new Vector2((float)x / mapWidth, (float)z / mapDepth);
-                tangents[i] = tangent;
             }
         }
 
         mesh.vertices = vertices;
         mesh.uv = uv;
-        mesh.tangents = tangents;
 
         int[] triangles = new int[6 * mapWidth * mapDepth];
         for (int ti = 0, vi = 0, z = 0; z < mapDepth; z++, vi++) {
