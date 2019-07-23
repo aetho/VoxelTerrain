@@ -28,6 +28,48 @@ public class MapDisplay : MonoBehaviour {
         textureRender.transform.localScale = new Vector3(width, 1, depth);
     }
 
+    private Color NormalColor(int r, int g, int b) {
+        return new Color(r / 255f, g / 255f, b / 255f);
+    }
+
+    public void DrawTerrainTexture(float[,] noiseMap) {
+        int width = noiseMap.GetLength(0);
+        int depth = noiseMap.GetLength(1);
+
+        Texture2D texture = new Texture2D(width, depth);
+
+        Color[] colourMap = new Color[width * depth];
+
+        for (int z = 0; z < depth; z++) {
+            for (int x = 0; x < width; x++) {
+                Color temp;
+
+                if (noiseMap[x, z] < 0.3) { // Deep sea
+                    temp = NormalColor(3, 57, 252);
+                } else if (noiseMap[x, z] < 0.5) { // Surface water
+                    temp = NormalColor(84, 190, 255);
+                } else if (noiseMap[x, z] < 0.52) { // Sands
+                    temp = NormalColor(232, 225, 146);
+                } else if (noiseMap[x, z] < 0.8) { // Grass
+                    temp = NormalColor(0, 161, 99);
+                } else { // Snow 
+                    temp = Color.white;
+                }
+
+                colourMap[z * width + x] = temp;
+            }
+        }
+
+        // texture.filterMode = FilterMode.Point;
+        texture.wrapMode = TextureWrapMode.Clamp;
+
+        texture.SetPixels(colourMap);
+        texture.Apply();
+
+        textureRender.sharedMaterial.mainTexture = texture;
+        textureRender.transform.localScale = new Vector3(width, 1, depth);
+    }
+
     public void GenerateMesh(float[,] noiseMap, float scale, float mapHeight) {
         int mapWidth = noiseMap.GetLength(0);
         int mapDepth = noiseMap.GetLength(1);
@@ -52,7 +94,7 @@ public class MapDisplay : MonoBehaviour {
                 float threshold = 0.5f;
                 if (noiseMap[xIndex, zIndex] < threshold) noiseMap[xIndex, zIndex] = threshold;
 
-                noiseMap[xIndex, zIndex] = (Mathf.Round(noiseMap[xIndex, zIndex] * 20.0f)) / 20.0f;
+                // noiseMap[xIndex, zIndex] = (Mathf.Round(noiseMap[xIndex, zIndex] * 20.0f)) / 20.0f;
 
                 yPos = noiseMap[xIndex, zIndex] * scale * mapHeight;
 
